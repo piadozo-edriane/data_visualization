@@ -13,21 +13,47 @@ class Dashboard {
         document.getElementById('runETL').addEventListener('click', () => {
             this.runETLProcess();
         });
+
+        // Add toggle chart/table event listeners
+        document.querySelectorAll('.toggle-chart').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const chartId = e.target.getAttribute('data-chart');
+                const container = e.target.closest('.chart-container, .table-container');
+                const isTable = chartId.includes('Table');
+                
+                if (container.classList.contains('hidden')) {
+                    container.classList.remove('hidden');
+                    e.target.textContent = `Hide ${isTable ? 'Table' : 'Chart'}`;
+                    
+                    // For charts, trigger resize after showing
+                    if (!isTable && this.charts[chartId]) {
+                        setTimeout(() => {
+                            this.charts[chartId].resize();
+                        }, 10);
+                    }
+                } else {
+                    container.classList.add('hidden');
+                    e.target.textContent = `Show ${isTable ? 'Table' : 'Chart'}`;
+                }
+            });
+        });
     }
 
     async runETLProcess() {
         const button = document.getElementById('runETL');
         const originalText = button.textContent;
+        const loadingDiv = document.getElementById('loading');
         
         try {
             button.textContent = 'Processing...';
             button.disabled = true;
+            loadingDiv.style.display = 'flex';
             
             const response = await fetch('api.php?action=run_etl');
             const result = await response.json();
             
             if (result.status === 'success') {
-                this.showMessage('ETL process completed successfully!', 'success');
+                this.showMessage(`ETL process completed successfully in ${result.execution_time} seconds!`, 'success');
                 this.loadDashboardData();
             } else {
                 this.showMessage('ETL process failed: ' + result.message, 'error');
@@ -37,6 +63,7 @@ class Dashboard {
         } finally {
             button.textContent = originalText;
             button.disabled = false;
+            loadingDiv.style.display = 'none';
         }
     }
 
@@ -340,17 +367,20 @@ class Dashboard {
         return new Intl.NumberFormat('en-US').format(value || 0);
     }
 
-    showMessage(message, type) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = type;
-        messageDiv.textContent = message;
+    showMessage(message, type = 'info') {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type}`;
+        alertDiv.textContent = message;
         
+        // Remove any existing alerts
+        document.querySelectorAll('.alert').forEach(alert => alert.remove());
+        
+        // Add the new alert at the top of the container
         const container = document.querySelector('.container');
-        container.insertBefore(messageDiv, container.firstChild);
+        container.insertBefore(alertDiv, container.firstChild);
         
-        setTimeout(() => {
-            messageDiv.remove();
-        }, 5000);
+        // Auto-remove after 5 seconds
+        setTimeout(() => alertDiv.remove(), 5000);
     }
 }
 

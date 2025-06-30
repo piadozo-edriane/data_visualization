@@ -67,7 +67,6 @@ class ETLProcessor {
         return count($data);
     }
     
-    // Transform and load product performance data
     public function processProductPerformance() {
         $query = "
             SELECT 
@@ -106,7 +105,6 @@ class ETLProcessor {
         return count($data);
     }
     
-    // Transform and load customer analytics data
     public function processCustomerAnalytics() {
         $query = "
             SELECT 
@@ -229,21 +227,18 @@ class ETLProcessor {
     // Run complete ETL process
     public function runETLProcess() {
         $results = [];
-        
         try {
             $results['sales_analytics'] = $this->processSalesAnalytics();
             $results['product_performance'] = $this->processProductPerformance();
             $results['customer_analytics'] = $this->processCustomerAnalytics();
             $results['employee_performance'] = $this->processEmployeePerformance();
             $results['geographic_analytics'] = $this->processGeographicAnalytics();
-            
             $results['status'] = 'success';
             $results['message'] = 'ETL process completed successfully';
         } catch (Exception $e) {
             $results['status'] = 'error';
             $results['message'] = 'ETL process failed: ' . $e->getMessage();
         }
-        
         return $results;
     }
 }
